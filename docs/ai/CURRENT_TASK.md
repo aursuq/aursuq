@@ -6,11 +6,11 @@ COMPLETED
 
 ## Current Phase
 
-Project foundation - API skeleton, health endpoint, and Owner Dashboard frontend completed.
+Project foundation - API skeleton, health endpoint, Owner Dashboard frontend completed.
 
 ## Current Task
 
-API skeleton, health endpoint, Owner Dashboard (Step 2-3 of implementation order)
+Owner Dashboard backend data endpoint and frontend connection completed.
 
 ## Completed
 
@@ -42,6 +42,16 @@ API skeleton, health endpoint, Owner Dashboard (Step 2-3 of implementation order
 - **Reusable components: StatCard, StatusBadge, DataTable, SectionCard, Sidebar, Header, DashboardLayout**
 - **Mock data library**
 - **Build passes (Web)**
+- **Owner Dashboard backend module created (`src/owner-dashboard/`)**
+- **GET /owner/dashboard/summary endpoint implemented with real Prisma counts**
+- **Frontend API layer connected to real backend endpoint**
+- **Summary cards now display real seller/customer counts**
+- **Unsupported metrics render as em-dash (—)**
+- **Loading/error states implemented**
+- **Backend unit tests added (service + controller)**
+- **All API tests pass (21/21)**
+- **All API builds pass**
+- **Web build passes (includes type checking)**
 
 ## Next
 
@@ -76,4 +86,4 @@ Use a dedicated development branch for implementation work unless the owner spec
 
 ## Last Updated
 
-2026-10-01 - Owner Dashboard frontend completed. Build passes successfully.
+2026-10-02 - Owner Dashboard backend data endpoint and frontend connection completed. All tests and builds pass.

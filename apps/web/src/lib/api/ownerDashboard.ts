@@ -1,13 +1,13 @@
 // Owner Dashboard API Service - Frontend data layer for real backend integration
-// Endpoints are isolated here and can be connected when backend is ready
 
 import type {
   OwnerDashboardData,
   TopStoresQuery,
   TopStoreSortBy,
+  DashboardSummaryMetrics,
 } from '@/lib/types/dashboard';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -15,6 +15,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+    credentials: 'include',
     ...options,
   });
 
@@ -27,17 +28,17 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 /**
- * Fetches the complete owner dashboard data.
- * Backend endpoint: GET /api/v1/owner/dashboard
- * Response: OwnerDashboardData
+ * Fetches dashboard summary metrics only.
+ * Backend endpoint: GET /owner/dashboard/summary
+ * Response: DashboardSummaryMetrics
  */
-export async function fetchOwnerDashboard(): Promise<OwnerDashboardData> {
-  return fetchJson<OwnerDashboardData>(`${API_BASE}/owner/dashboard`);
+export async function fetchDashboardSummary(): Promise<DashboardSummaryMetrics> {
+  return fetchJson<DashboardSummaryMetrics>(`${API_BASE_URL}/owner/dashboard/summary`);
 }
 
 /**
  * Fetches top stores with sorting.
- * Backend endpoint: GET /api/v1/owner/dashboard/top-stores?sortBy=sales|profit&limit=10
+ * Backend endpoint: GET /owner/dashboard/top-stores?sortBy=sales|profit&limit=10
  * Response: TopStore[]
  */
 export async function fetchTopStores(query: TopStoresQuery): Promise<OwnerDashboardData['topStores']> {
@@ -45,52 +46,43 @@ export async function fetchTopStores(query: TopStoresQuery): Promise<OwnerDashbo
     sortBy: query.sortBy,
     ...(query.limit && { limit: query.limit.toString() }),
   });
-  return fetchJson(`${API_BASE}/owner/dashboard/top-stores?${params}`);
+  return fetchJson(`${API_BASE_URL}/owner/dashboard/top-stores?${params}`);
 }
 
 /**
  * Fetches today's orders.
- * Backend endpoint: GET /api/v1/owner/dashboard/today-orders
+ * Backend endpoint: GET /owner/dashboard/today-orders
  * Response: TodayOrder[]
  */
 export async function fetchTodayOrders(): Promise<OwnerDashboardData['todayOrders']> {
-  return fetchJson(`${API_BASE}/owner/dashboard/today-orders`);
+  return fetchJson(`${API_BASE_URL}/owner/dashboard/today-orders`);
 }
 
 /**
  * Fetches warehouse overview.
- * Backend endpoint: GET /api/v1/owner/dashboard/warehouse
+ * Backend endpoint: GET /owner/dashboard/warehouse
  * Response: WarehouseOverview
  */
 export async function fetchWarehouseOverview(): Promise<OwnerDashboardData['warehouse']> {
-  return fetchJson(`${API_BASE}/owner/dashboard/warehouse`);
+  return fetchJson(`${API_BASE_URL}/owner/dashboard/warehouse`);
 }
 
 /**
  * Fetches support overview.
- * Backend endpoint: GET /api/v1/owner/dashboard/support
+ * Backend endpoint: GET /owner/dashboard/support
  * Response: SupportOverview
  */
 export async function fetchSupportOverview(): Promise<OwnerDashboardData['support']> {
-  return fetchJson(`${API_BASE}/owner/dashboard/support`);
+  return fetchJson(`${API_BASE_URL}/owner/dashboard/support`);
 }
 
 /**
  * Fetches recent activity.
- * Backend endpoint: GET /api/v1/owner/dashboard/activity?limit=20
+ * Backend endpoint: GET /owner/dashboard/activity?limit=20
  * Response: RecentActivityItem[]
  */
 export async function fetchRecentActivity(limit = 20): Promise<OwnerDashboardData['recentActivity']> {
-  return fetchJson(`${API_BASE}/owner/dashboard/activity?limit=${limit}`);
-}
-
-/**
- * Fetches dashboard summary metrics only.
- * Backend endpoint: GET /api/v1/owner/dashboard/summary
- * Response: DashboardSummaryMetrics
- */
-export async function fetchDashboardSummary(): Promise<OwnerDashboardData['summary']> {
-  return fetchJson(`${API_BASE}/owner/dashboard/summary`);
+  return fetchJson(`${API_BASE_URL}/owner/dashboard/activity?limit=${limit}`);
 }
 
 // Convenience function to fetch all dashboard data in parallel
@@ -123,19 +115,20 @@ export function hasDashboardData(data: OwnerDashboardData | null): data is Owner
 
 /**
  * Default empty state for dashboard - used when no real data is connected
+ * Note: null values indicate metrics not yet implemented (not zero)
  */
 export const EMPTY_DASHBOARD_DATA: OwnerDashboardData = {
   summary: {
     totalSellers: 0,
     activeSellers: 0,
-    totalOrders: 0,
-    todayOrders: 0,
     totalCustomers: 0,
-    warehouseUnits: 0,
-    frozenSellerFunds: 0,
-    availableSellerFunds: 0,
-    aursuqProfit: 0,
-    todaysProfit: 0,
+    totalOrders: null,
+    todayOrders: null,
+    warehouseUnits: null,
+    frozenSellerFunds: null,
+    availableSellerFunds: null,
+    aursuqProfit: null,
+    todaysProfit: null,
   },
   topStores: [],
   todayOrders: [],

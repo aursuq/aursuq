@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/ui/StatCard';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { DataTable } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { AlertCircle } from 'lucide-react';
 import {
   Users,
   UserCheck,
@@ -19,7 +20,6 @@ import {
   Search,
   AlertTriangle,
   ShieldAlert,
-  AlertCircle,
   Clock,
   ArrowUpCircle,
 } from 'lucide-react';
@@ -32,7 +32,15 @@ import type {
   SupportOverview,
   RecentActivityItem,
 } from '@/lib/types/dashboard';
-import { EMPTY_DASHBOARD_DATA } from '@/lib/api/ownerDashboard';
+import {
+  fetchDashboardSummary,
+  fetchTopStores,
+  fetchTodayOrders,
+  fetchWarehouseOverview,
+  fetchSupportOverview,
+  fetchRecentActivity,
+  EMPTY_DASHBOARD_DATA,
+} from '@/lib/api/ownerDashboard';
 
 const iconMap: Record<string, React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>>> = {
   Users,
@@ -121,7 +129,55 @@ const activityColors: Record<string, string> = {
 export default function OwnerDashboard() {
   const [sellerSortBy, setSellerSortBy] = React.useState<'sales' | 'profit'>('sales');
   const [dashboardData, setDashboardData] = React.useState<OwnerDashboardData>(EMPTY_DASHBOARD_DATA);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const { t } = useLanguage();
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadDashboardData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [summary, topStores, todayOrders, warehouse, support, recentActivity] = await Promise.all([
+          fetchDashboardSummary(),
+          fetchTopStores({ sortBy: 'sales' }),
+          fetchTodayOrders(),
+          fetchWarehouseOverview(),
+          fetchSupportOverview(),
+          fetchRecentActivity(),
+        ]);
+
+        if (mounted) {
+          setDashboardData({
+            summary,
+            topStores,
+            todayOrders,
+            warehouse,
+            support,
+            recentActivity,
+          });
+        }
+      } catch (err) {
+        if (mounted) {
+          const message = err instanceof Error ? err.message : t('dashboard.error.loadingFailed');
+          setError(message);
+          // Keep EMPTY_DASHBOARD_DATA as fallback
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadDashboardData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [t]);
 
   const sortedSellers = React.useMemo(() => {
     const list = [...dashboardData.topStores];
@@ -217,10 +273,14 @@ export default function OwnerDashboard() {
 
   const summaryStats = statCards.map((stat, index) => {
     const key = stat.labelKey.replace('dashboard.stats.', '') as keyof DashboardSummaryMetrics;
-    const value = dashboardData.summary[key] as number;
+    const value = dashboardData.summary[key];
+    // null means metric not yet implemented -> show em dash
+    // 0 is a real zero -> show 0
+    // positive number -> show the number
+    const displayValue = value === null ? '—' : value === 0 ? '0' : value;
     return {
       ...stat,
-      value: value === 0 ? '—' : value,
+      value: displayValue,
       trendKey: undefined,
       trendUp: undefined,
     };
@@ -228,8 +288,25 @@ export default function OwnerDashboard() {
 
   return (
     <DashboardLayout title={t('dashboard.title')}>
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2 text-red-700">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p>{error}</p>
+          </div>
+        </div>
+      )}
+
+      {!loading && (
+        <>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         {summaryStats.map((stat, index) => {
           const Icon = iconMap[stat.icon];
           return (
@@ -326,6 +403,8 @@ export default function OwnerDashboard() {
           )}
         </div>
       </SectionCard>
+        </>
+      )}
     </DashboardLayout>
   );
 }

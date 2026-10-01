@@ -4,14 +4,17 @@
 export interface DashboardSummaryMetrics {
   totalSellers: number;
   activeSellers: number;
-  totalOrders: number;
-  todayOrders: number;
   totalCustomers: number;
-  warehouseUnits: number;
-  frozenSellerFunds: number; // in smallest currency unit (agorot/cents)
-  availableSellerFunds: number; // in smallest currency unit
-  aursuqProfit: number; // in smallest currency unit
-  todaysProfit: number; // in smallest currency unit
+
+  totalOrders: number | null;
+  todayOrders: number | null;
+  warehouseUnits: number | null;
+
+  frozenSellerFunds: number | null; // in smallest currency unit (agorot/cents)
+  availableSellerFunds: number | null; // in smallest currency unit
+
+  aursuqProfit: number | null; // in smallest currency unit
+  todaysProfit: number | null; // in smallest currency unit
 }
 
 export interface TopStore {
