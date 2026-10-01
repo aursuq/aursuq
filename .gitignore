@@ -4,9 +4,15 @@ node_modules
 dist
 coverage
 .env
+.cline-runtime/
+
 .env.*
 !.env.example
 .DS_Store
 *.log
 .idea
 .vscode
+*.tsbuildinfo
+
+__pycache__/
+*.pyc

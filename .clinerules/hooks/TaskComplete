@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+#
+# TaskComplete Hook
+# Executes when a task completes.
+# Sends the final short paragraph success email using the contents of .cline-runtime/final-summary.txt.
+# Prevents duplicate success emails.
+
+set -euo pipefail
+
+WORKSPACE_DIR="$(dirname "$0")/../.."
+RUNTIME_DIR="$WORKSPACE_DIR/.cline-runtime"
+STATE_FILE="$RUNTIME_DIR/state.json"
+SUMMARY_FILE="$RUNTIME_DIR/final-summary.txt"
+NOTIFY_SCRIPT="$WORKSPACE_DIR/scripts/cline_notify.py"
+
+# Read state
+STATUS=$(python3 -c "
+import json
+try:
+    with open('$STATE_FILE', 'r') as f:
+        print(json.load(f).get('status', 'IDLE'))
+except Exception:
+    print('IDLE')
+" 2>/dev/null || echo "IDLE")
+
+SUCCESS_SENT=$(python3 -c "
+import json
+try:
+    with open('$STATE_FILE', 'r') as f:
+        print(str(json.load(f).get('success_email_sent', False)).lower())
+except Exception:
+    print('false')
+" 2>/dev/null || echo "false")
+
+# Update state: mark COMPLETED
+python3 -c "
+import json, sys
+try:
+    with open('$STATE_FILE', 'r') as f:
+        state = json.load(f)
+except Exception:
+    state = {}
+state['status'] = 'COMPLETED'
+with open('$STATE_FILE', 'w') as f:
+    json.dump(state, f, indent=2)
+"
+
+# Prevent duplicate success emails
+if [ "$SUCCESS_SENT" = "true" ]; then
+    echo "Success email already sent for this task. Skipping duplicate."
+    exit 0
+fi
+
+# Prepare summary text - use fallback if file missing/empty
+if [ -f "$SUMMARY_FILE" ] && [ -s "$SUMMARY_FILE" ]; then
+    SUMMARY_TEXT=$(cat "$SUMMARY_FILE")
+else
+    SUMMARY_TEXT="Current Aursuq task completed. Detailed summary was not available."
+fi
+
+# Send success email via success command with message directly (not success-file)
+python3 "$NOTIFY_SCRIPT" success "$SUMMARY_TEXT"
+
+# Mark success email as sent in state
+python3 -c "
+import json
+with open('$STATE_FILE', 'r') as f:
+    state = json.load(f)
+state['success_email_sent'] = True
+with open('$STATE_FILE', 'w') as f:
+    json.dump(state, f, indent=2)
+"
+
+echo "{\"status\": \"ok\"}"

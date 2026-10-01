@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# PostToolUse Hook
+# Updates heartbeat only.
+#
+# Input (JSON on stdin):
+#   taskId
+#   postToolUse:
+#     tool
+#     input
+#     output
+#     success
+
+set -euo pipefail
+
+RUNTIME_DIR="$(dirname "$0")/../../.cline-runtime"
+STATE_FILE="$RUNTIME_DIR/state.json"
+
+# Current timestamp ISO 8601
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Update state: update heartbeat only
+python3 -c "
+import json, sys
+with open('$STATE_FILE', 'r') as f:
+    state = json.load(f)
+state['last_heartbeat'] = '$TIMESTAMP'
+with open('$STATE_FILE', 'w') as f:
+    json.dump(state, f, indent=2)
+"
+
+echo "{\"status\": \"ok\"}"

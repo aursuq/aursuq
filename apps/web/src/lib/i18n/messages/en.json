@@ -1,0 +1,140 @@
+{
+  "brand": "Aursuq",
+  "nav": {
+    "overview": "Overview",
+    "sellers": "Sellers",
+    "admins": "Admins",
+    "users": "Users",
+    "orders": "Orders",
+    "warehouse": "Warehouse",
+    "support": "Support",
+    "finance": "Finance",
+    "promotions": "Promotions",
+    "settings": "Settings"
+  },
+  "header": {
+    "searchPlaceholder": "Quick search...",
+    "menuAriaLabel": "Open menu",
+    "profileTitle": "Platform Owner",
+    "profileEmail": "owner@aursuq.com"
+  },
+  "dashboard": {
+    "title": "Owner Dashboard",
+    "stats": {
+      "totalSellers": "Total Sellers",
+      "activeSellers": "Active Sellers",
+      "totalOrders": "Total Orders",
+      "todayOrders": "Today's Orders",
+      "totalCustomers": "Total Customers",
+      "warehouseUnits": "Warehouse Units",
+      "frozenBalances": "Frozen Seller Balances",
+      "availableBalances": "Available Seller Balances",
+      "aursuqProfit": "Aursuq Profit",
+      "todaysProfit": "Today's profit",
+      "trend": {
+        "lastMonth": "+12% from last month",
+        "yesterday": "+15% from yesterday",
+        "newUnits": "5,230 new units",
+        "pendingSettlement": "Pending settlement",
+        "readyForWithdrawal": "Ready for withdrawal"
+      }
+    },
+    "sections": {
+      "sellerOverview": "Top Stores",
+      "orderOverview": "Today's Latest Orders",
+      "warehouseOverview": "Warehouse Overview",
+      "supportOverview": "Support Overview",
+      "recentActivity": "Recent Activity"
+    },
+    "sellerFilter": {
+      "topBySales": "Top by Sales",
+      "topByProfit": "Top by Profit",
+      "profitNotAvailable": "Profit data not currently available"
+    },
+    "sellerTable": {
+      "name": "Seller Name",
+      "storeName": "Store Name",
+      "verificationStatus": "Verification Status",
+      "productCount": "Products",
+      "stockStatus": "Stock Status",
+      "salesCount": "Sales",
+      "accountStatus": "Account Status",
+      "verification": {
+        "verified": "Verified",
+        "pending": "Under Review",
+        "rejected": "Rejected"
+      },
+      "stock": {
+        "stocked": "In Stock",
+        "low": "Low",
+        "out": "Out of Stock"
+      },
+      "account": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "suspended": "Suspended"
+      }
+    },
+    "orderTable": {
+      "id": "Order ID",
+      "customer": "Customer",
+      "sellerCount": "Sellers",
+      "total": "Total",
+      "status": "Status",
+      "date": "Date",
+      "statuses": {
+        "delivered": "Delivered",
+        "shipped": "Shipped",
+        "processing": "Processing",
+        "cancelled": "Cancelled"
+      }
+    },
+    "warehouse": {
+      "incomingShipments": "Incoming Shipments",
+      "underInspection": "Under Inspection",
+      "stockedUnits": "Stocked Units",
+      "lowStockAlerts": "Low Stock Alerts",
+      "damagedUnits": "Damaged/Isolated Units"
+    },
+    "support": {
+      "openComplaints": "Open Complaints",
+      "pendingCases": "Pending Support Cases",
+      "escalatedCases": "Escalated Cases"
+    },
+    "activity": {
+      "sellerVerified": "Seller \"{store}\" verified",
+      "inboundShipmentCreated": "New inbound shipment created #{id}",
+      "orderDelivered": "Order #{id} delivered",
+      "payoutRequested": "Payout requested from seller \"{store}\" - {amount}",
+      "sellerSuspended": "Seller \"{store}\" suspended - policy violation",
+      "shipmentReceived": "Shipment #{id} received - {units} units",
+      "sellerVerifiedManual": "Seller \"{store}\" verified",
+      "byAutoVerification": "Auto Verification System",
+      "byWarehouseStaff": "{city} Warehouse - Staff {name}",
+      "byDeliveryCompany": "Delivery Company - {name}",
+      "bySeller": "{name}",
+      "byAdmin": "Admin {name}",
+      "byWarehouseStaff2": "{city} Warehouse - Staff {name}",
+      "timeAgo": {
+        "minutes": "{count} minutes ago",
+        "hours": "{count} hours ago"
+      }
+    },
+    "empty": {
+      "noData": "No data available yet",
+      "noStores": "No stores yet",
+      "noOrders": "No orders today",
+      "noActivity": "No recent activity",
+      "loading": "Loading...",
+      "error": "Failed to load data"
+    }
+  },
+  "sidebar": {
+    "footer": "Owner Dashboard - Aursuq"
+  },
+  "languages": {
+    "ar": "العربية / AR",
+    "he": "עברית / HE",
+    "en": "English / EN"
+  }
+}

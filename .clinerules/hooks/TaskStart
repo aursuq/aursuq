@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# TaskStart Hook
+# Executes when a new task begins.
+#
+# Input (JSON on stdin):
+#   taskId
+#   taskStart:
+#     taskMetadata:
+#       description
+#       instructions
+#       workspaceRoot
+#   workspaceRoots: []
+
+set -euo pipefail
+
+RUNTIME_DIR="$(dirname "$0")/../../.cline-runtime"
+STATE_FILE="$RUNTIME_DIR/state.json"
+
+# Read JSON input
+INPUT=$(cat)
+
+# Extract taskId (optional, may not be present)
+TASK_ID=$(echo "$INPUT" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('taskId', ''))" 2>/dev/null || echo "")
+
+# Current timestamp ISO 8601
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Update state: mark RUNNING, set start time, update heartbeat, clear stalled/error flags, RESET success_email_sent for new task
+python3 -c "
+import json, sys
+with open('$STATE_FILE', 'r') as f:
+    state = json.load(f)
+state['status'] = 'RUNNING'
+state['task_start_time'] = '$TIMESTAMP'
+state['last_heartbeat'] = '$TIMESTAMP'
+state['stalled_email_sent'] = False
+state['error_email_sent'] = False
+state['success_email_sent'] = False
+if '$TASK_ID':
+    state['task_id'] = '$TASK_ID'
+with open('$STATE_FILE', 'w') as f:
+    json.dump(state, f, indent=2)
+"
+
+echo "{\"status\": \"ok\"}"

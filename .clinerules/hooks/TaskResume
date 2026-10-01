@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# TaskResume Hook
+# Executes when a task is resumed.
+#
+# Input (JSON on stdin):
+#   taskId
+#   taskResume:
+#     taskMetadata:
+#       description
+#       instructions
+#       workspaceRoot
+#   workspaceRoots: []
+
+set -euo pipefail
+
+RUNTIME_DIR="$(dirname "$0")/../../.cline-runtime"
+STATE_FILE="$RUNTIME_DIR/state.json"
+
+# Read JSON input
+INPUT=$(cat)
+
+# Current timestamp ISO 8601
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Update state: mark RUNNING, update heartbeat, clear stalled/error flags
+python3 -c "
+import json, sys
+with open('$STATE_FILE', 'r') as f:
+    state = json.load(f)
+state['status'] = 'RUNNING'
+state['last_heartbeat'] = '$TIMESTAMP'
+state['stalled_email_sent'] = False
+state['error_email_sent'] = False
+with open('$STATE_FILE', 'w') as f:
+    json.dump(state, f, indent=2)
+"
+
+echo "{\"status\": \"ok\"}"

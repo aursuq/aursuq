@@ -1,0 +1,140 @@
+{
+  "brand": "Aursuq",
+  "nav": {
+    "overview": "סקירה כללית",
+    "sellers": "מוכרים",
+    "admins": "מנהלים",
+    "users": "משתמשים",
+    "orders": "הזמנות",
+    "warehouse": "מחסן",
+    "support": "תמיכה",
+    "finance": "כספים",
+    "promotions": "מבצעים",
+    "settings": "הגדרות"
+  },
+  "header": {
+    "searchPlaceholder": "חיפוש מהיר...",
+    "menuAriaLabel": "פתח תפריט",
+    "profileTitle": "בעל הפלטפורמה",
+    "profileEmail": "owner@aursuq.com"
+  },
+  "dashboard": {
+    "title": "לוח בקרה של הבעלים",
+    "stats": {
+      "totalSellers": "סך המוכרים",
+      "activeSellers": "מוכרים פעילים",
+      "totalOrders": "סך ההזמנות",
+      "todayOrders": "הזמנות היום",
+      "totalCustomers": "סך הלקוחות",
+      "warehouseUnits": "יחידות במחסן",
+      "frozenBalances": "יתרות מוכרים מוקפאות",
+      "availableBalances": "יתרות מוכרים זמינות",
+      "aursuqProfit": "רווחי Aursuq",
+      "todaysProfit": "הרווח היום",
+      "trend": {
+        "lastMonth": "+12% מהחודש שעבר",
+        "yesterday": "+15% מאתמול",
+        "newUnits": "5,230 יחידות חדשות",
+        "pendingSettlement": "ממתין להסדר",
+        "readyForWithdrawal": "מוכן למשיכה"
+      }
+    },
+    "sections": {
+      "sellerOverview": "החנויות המובילות",
+      "orderOverview": "ההזמנות האחרונות של היום",
+      "warehouseOverview": "סקירת מחסן",
+      "supportOverview": "סקירת תמיכה",
+      "recentActivity": "פעילות אחרונה"
+    },
+    "sellerFilter": {
+      "topBySales": "המובילים לפי מכירות",
+      "topByProfit": "המובילים לפי רווחים",
+      "profitNotAvailable": "נתוני רווח אינם זמינים כרגע"
+    },
+    "sellerTable": {
+      "name": "שם המוכר",
+      "storeName": "שם החנות",
+      "verificationStatus": "סטטוס אימות",
+      "productCount": "מוצרים",
+      "stockStatus": "סטטוס מלאי",
+      "salesCount": "מכירות",
+      "accountStatus": "סטטוס חשבון",
+      "verification": {
+        "verified": "מאומת",
+        "pending": "ממתין לאישור",
+        "rejected": "נדחה"
+      },
+      "stock": {
+        "stocked": "במלאי",
+        "low": "נמוך",
+        "out": "אזל"
+      },
+      "account": {
+        "active": "פעיל",
+        "inactive": "לא פעיל",
+        "suspended": "מושעה"
+      }
+    },
+    "orderTable": {
+      "id": "מספר הזמנה",
+      "customer": "לקוח",
+      "sellerCount": "מוכרים",
+      "total": "סך הכל",
+      "status": "סטטוס",
+      "date": "תאריך",
+      "statuses": {
+        "delivered": "נמסר",
+        "shipped": "נשלח",
+        "processing": "בטיפול",
+        "cancelled": "בוטל"
+      }
+    },
+    "warehouse": {
+      "incomingShipments": "משלוחים נכנסים",
+      "underInspection": "בבדיקה",
+      "stockedUnits": "יחידות במלאי",
+      "lowStockAlerts": "התראות מלאי נמוך",
+      "damagedUnits": "יחידות פגומות/מבודדות"
+    },
+    "support": {
+      "openComplaints": "תלונות פתוחות",
+      "pendingCases": "מקרי תמיכה ממתינים",
+      "escalatedCases": "מקרים מורחבים"
+    },
+    "activity": {
+      "sellerVerified": "המוכר \"{store}\" אומת",
+      "inboundShipmentCreated": "נוצר משלוח נכנס חדש #{id}",
+      "orderDelivered": "הזמנה #{id} נמסרה",
+      "payoutRequested": "בקשת משיכת יתרות מהמוכר \"{store}\" - {amount}",
+      "sellerSuspended": "המוכר \"{store}\" הושעה - הפרת מדיניות",
+      "shipmentReceived": "התקבל משלוח #{id} - {units} יחידות",
+      "sellerVerifiedManual": "המוכר \"{store}\" אומת",
+      "byAutoVerification": "מערכת אימות אוטומטית",
+      "byWarehouseStaff": "מחסן {city} - עובד {name}",
+      "byDeliveryCompany": "חברת משלוחים - {name}",
+      "bySeller": "{name}",
+      "byAdmin": "מנהל {name}",
+      "byWarehouseStaff2": "מחסן {city} - עובדת {name}",
+      "timeAgo": {
+        "minutes": "מאז {count} דקות",
+        "hours": "מאז {count} שעות"
+      }
+    },
+    "empty": {
+      "noData": "אין נתונים עדיין",
+      "noStores": "אין חנויות עדיין",
+      "noOrders": "אין הזמנות להיום",
+      "noActivity": "אין פעילות אחרונה",
+      "loading": "טוען...",
+      "error": "אירעה שגיאה בטעינת הנתונים"
+    }
+  },
+  "sidebar": {
+    "footer": "לוח בקרה של הבעלים - Aursuq"
+  },
+  "languages": {
+    "ar": "العربية / AR",
+    "he": "עברית / HE",
+    "en": "English / EN"
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "brand": "Aursuq",
+  "nav": {
+    "overview": "نظرة عامة",
+    "sellers": "البائعون",
+    "admins": "المديرون",
+    "users": "المستخدمون",
+    "orders": "الطلبات",
+    "warehouse": "المستودع",
+    "support": "الدعم",
+    "finance": "المالية",
+    "promotions": "العروض",
+    "settings": "الإعدادات"
+  },
+  "header": {
+    "searchPlaceholder": "بحث سريع...",
+    "menuAriaLabel": "فتح القائمة",
+    "profileTitle": "مالك المنصة",
+    "profileEmail": "owner@aursuq.com"
+  },
+  "dashboard": {
+    "title": "لوحة تحكم المالك",
+    "stats": {
+      "totalSellers": "إجمالي البائعين",
+      "activeSellers": "البائعون النشطون",
+      "totalOrders": "إجمالي الطلبات",
+      "todayOrders": "طلبات اليوم",
+      "totalCustomers": "إجمالي العملاء",
+      "warehouseUnits": "وحدات المستودع",
+      "frozenBalances": "أرصدة بائعين مجمدة",
+      "availableBalances": "أرصدة بائعين متاحة",
+      "aursuqProfit": "أرباح Aursuq",
+      "todaysProfit": "ربح اليوم",
+      "trend": {
+        "lastMonth": "+12% من الشهر الماضي",
+        "yesterday": "+15% من أمس",
+        "newUnits": "5,230 وحدة جديدة",
+        "pendingSettlement": "في انتظار التسوية",
+        "readyForWithdrawal": "جاهزة للسحب"
+      }
+    },
+    "sections": {
+      "sellerOverview": "أفضل المتاجر",
+      "orderOverview": "أحدث طلبات اليوم",
+      "warehouseOverview": "نظرة عامة على المستودع",
+      "supportOverview": "نظرة عامة على الدعم",
+      "recentActivity": "النشاط الأخير"
+    },
+    "sellerFilter": {
+      "topBySales": "أفضل المتاجر حسب المبيعات",
+      "topByProfit": "أفضل المتاجر حسب الأرباح",
+      "profitNotAvailable": "بيانات الأرباح غير متوفرة حالياً"
+    },
+    "sellerTable": {
+      "name": "اسم البائع",
+      "storeName": "اسم المتجر",
+      "verificationStatus": "حالة التوثيق",
+      "productCount": "المنتجات",
+      "stockStatus": "حالة المخزون",
+      "salesCount": "المبيعات",
+      "accountStatus": "حالة الحساب",
+      "verification": {
+        "verified": "موثق",
+        "pending": "قيد المراجعة",
+        "rejected": "مرفوض"
+      },
+      "stock": {
+        "stocked": "مخزنة",
+        "low": "منخفض",
+        "out": "نفد"
+      },
+      "account": {
+        "active": "نشط",
+        "inactive": "غير نشط",
+        "suspended": "موقوف"
+      }
+    },
+    "orderTable": {
+      "id": "رقم الطلب",
+      "customer": "العميل",
+      "sellerCount": "بائعين",
+      "total": "الإجمالي",
+      "status": "الحالة",
+      "date": "التاريخ",
+      "statuses": {
+        "delivered": "مسلم",
+        "shipped": "تم الشحن",
+        "processing": "قيد المعالجة",
+        "cancelled": "ملغي"
+      }
+    },
+    "warehouse": {
+      "incomingShipments": "شحنات قيد الوصول",
+      "underInspection": "تحت الفحص",
+      "stockedUnits": "وحدات مخزنة",
+      "lowStockAlerts": "تنبيهات مخزون منخفض",
+      "damagedUnits": "وحدات تالفة/معزولة"
+    },
+    "support": {
+      "openComplaints": "شكاوى مفتوحة",
+      "pendingCases": "حالات دعم معلقة",
+      "escalatedCases": "حالات مصعدة"
+    },
+    "activity": {
+      "sellerVerified": "تم توثيق البائع \"{store}\"",
+      "inboundShipmentCreated": "تم إنشاء شحنة وارد جديدة #{id}",
+      "orderDelivered": "تم تسليم الطلب #{id}",
+      "payoutRequested": "طلب سحب أرصدة من البائع \"{store}\" - {amount}",
+      "sellerSuspended": "تم إيقاف البائع \"{store}\" - مخالفة سياسة",
+      "shipmentReceived": "تم استلام شحنة #{id} - {units} وحدة",
+      "sellerVerifiedManual": "تم توثيق البائع \"{store}\"",
+      "byAutoVerification": "نظام التحقق التلقائي",
+      "byWarehouseStaff": "مستودع {city} - الموظف {name}",
+      "byDeliveryCompany": "شركة التوصيل - {name}",
+      "bySeller": "{name}",
+      "byAdmin": "المدير {name}",
+      "byWarehouseStaff2": "مستودع {city} - الموظفة {name}",
+      "timeAgo": {
+        "minutes": "منذ {count} دقائق",
+        "hours": "منذ {count} ساعات"
+      }
+    },
+    "empty": {
+      "noData": "لا توجد بيانات بعد",
+      "noStores": "لا توجد متاجر بعد",
+      "noOrders": "لا توجد طلبات اليوم",
+      "noActivity": "لا يوجد نشاط حديث",
+      "loading": "جاري التحميل...",
+      "error": "حدث خطأ في تحميل البيانات"
+    }
+  },
+  "sidebar": {
+    "footer": "لوحة تحكم المالك - Aursuq"
+  },
+  "languages": {
+    "ar": "العربية / AR",
+    "he": "עברית / HE",
+    "en": "English / EN"
+  }
+}

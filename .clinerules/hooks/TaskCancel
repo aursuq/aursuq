@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# TaskCancel Hook
+# Executes when a task is cancelled.
+# Sends cancelled email.
+
+set -euo pipefail
+
+WORKSPACE_DIR="$(dirname "$0")/../.."
+RUNTIME_DIR="$WORKSPACE_DIR/.cline-runtime"
+STATE_FILE="$RUNTIME_DIR/state.json"
+
+# Read JSON input
+INPUT=$(cat)
+
+# Update state: mark CANCELLED
+python3 -c "
+import json, sys
+with open('$STATE_FILE', 'r') as f:
+    state = json.load(f)
+state['status'] = 'CANCELLED'
+with open('$STATE_FILE', 'w') as f:
+    json.dump(state, f, indent=2)
+"
+
+# Send cancelled email
+python3 "$WORKSPACE_DIR/scripts/cline_notify.py" cancelled "Task was cancelled by user or system."
+
+echo "{\"status\": \"ok\"}"
