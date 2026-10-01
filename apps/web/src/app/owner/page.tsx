@@ -34,11 +34,6 @@ import type {
 } from '@/lib/types/dashboard';
 import {
   fetchDashboardSummary,
-  fetchTopStores,
-  fetchTodayOrders,
-  fetchWarehouseOverview,
-  fetchSupportOverview,
-  fetchRecentActivity,
   EMPTY_DASHBOARD_DATA,
 } from '@/lib/api/ownerDashboard';
 
@@ -140,23 +135,12 @@ export default function OwnerDashboard() {
       setLoading(true);
       setError(null);
       try {
-        const [summary, topStores, todayOrders, warehouse, support, recentActivity] = await Promise.all([
-          fetchDashboardSummary(),
-          fetchTopStores({ sortBy: 'sales' }),
-          fetchTodayOrders(),
-          fetchWarehouseOverview(),
-          fetchSupportOverview(),
-          fetchRecentActivity(),
-        ]);
+        const summary = await fetchDashboardSummary();
 
         if (mounted) {
           setDashboardData({
+            ...EMPTY_DASHBOARD_DATA,
             summary,
-            topStores,
-            todayOrders,
-            warehouse,
-            support,
-            recentActivity,
           });
         }
       } catch (err) {
