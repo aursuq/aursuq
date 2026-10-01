@@ -129,6 +129,17 @@
       "error": "Failed to load data"
     }
   },
+  "login": {
+    "title": "Owner Login",
+    "subtitle": "Sign in to access the Owner Dashboard",
+    "continueWithGoogle": "Continue with Google",
+    "signingIn": "Signing in...",
+    "accessDenied": "Access Denied",
+    "accountNotAuthorized": "This account is not authorized to access the Owner Dashboard.",
+    "loginFailed": "Login failed. Please try again.",
+    "logout": "Logout",
+    "loggingOut": "Logging out..."
+  },
   "sidebar": {
     "footer": "Owner Dashboard - Aursuq"
   },

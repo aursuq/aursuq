@@ -129,6 +129,17 @@
       "error": "אירעה שגיאה בטעינת הנתונים"
     }
   },
+  "login": {
+    "title": "התחברות בעלים",
+    "subtitle": "התחבר כדי לגשת ללוח הבקרה של הבעלים",
+    "continueWithGoogle": "המשך באמצעות Google",
+    "signingIn": "מתחבר...",
+    "accessDenied": "הגישה נדחתה",
+    "accountNotAuthorized": "חשבון זה אינו מורשה לגשת ללוח הבקרה של הבעלים.",
+    "loginFailed": "ההתחברות נכשלה. נסה שוב.",
+    "logout": "התנתק",
+    "loggingOut": "מתנתק..."
+  },
   "sidebar": {
     "footer": "לוח בקרה של הבעלים - Aursuq"
   },

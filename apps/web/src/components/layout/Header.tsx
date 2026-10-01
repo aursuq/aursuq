@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, UserCircle, Menu, Globe, ChevronDown, Check } from 'lucide-react';
+import { Search, Bell, UserCircle, Menu, Globe, ChevronDown, Check, LogOut, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 interface HeaderProps {
   title: string;
@@ -10,8 +11,10 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ title, onMenuClick }) => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, isRTL } = useLanguage();
+  const { user, logout, loading: authLoading } = useAuth();
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
   const languages: { code: 'ar' | 'he' | 'en'; label: string }[] = [
@@ -31,6 +34,18 @@ export const Header: React.FC<HeaderProps> = ({ title, onMenuClick }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      window.location.href = '/owner/login';
+    } catch {
+      // Logout error handled by redirect
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
       <div className="flex items-center justify-between h-16 px-6">
@@ -46,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ title, onMenuClick }) => {
           <h1 className="text-xl font-bold text-slate-900">{title}</h1>
         </div>
 
-        {/* Right side - Search, Notifications, Profile, Language Selector */}
+        {/* Right side - Search, Notifications, Profile, Language Selector, Logout */}
         <div className="flex items-center gap-4">
           {/* Search */}
           <div className="hidden md:block relative">
@@ -99,13 +114,28 @@ export const Header: React.FC<HeaderProps> = ({ title, onMenuClick }) => {
             <span className="absolute top-1 left-1 w-2 h-2 bg-red-500 rounded-full" />
           </button>
 
-          {/* Profile */}
+          {/* Profile with Logout */}
           <div className="flex items-center gap-3 pl-4 border-r border-slate-200 pr-4">
             <UserCircle className="w-8 h-8 text-slate-400" />
             <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium text-slate-900">{t('header.profileTitle')}</p>
+              <p className="text-sm font-medium text-slate-900">
+                {user ? `${t('header.profileTitle')} (${user.email})` : t('header.profileTitle')}
+              </p>
               <p className="text-xs text-slate-500">{t('header.profileEmail')}</p>
             </div>
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut || authLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={t('login.logout')}
+            >
+              {isLoggingOut ? (
+                <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+              ) : (
+                <LogOut className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">{t('login.logout')}</span>
+            </button>
           </div>
         </div>
       </div>
