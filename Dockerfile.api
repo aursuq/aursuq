@@ -8,6 +8,9 @@
 # =============================================================================
 FROM node:20-alpine AS base
 
+# Install OpenSSL for Prisma (required during generation in builder, and at runtime in runner)
+RUN apk add --no-cache openssl
+
 # Enable corepack for pnpm
 RUN corepack enable && corepack prepare pnpm@10.17.1 --activate
 
@@ -47,20 +50,22 @@ RUN pnpm build
 # =============================================================================
 FROM node:20-alpine AS runner
 
+# Install OpenSSL for Prisma query engine (required on Alpine)
+RUN apk add --no-cache openssl
+
 # Enable corepack for pnpm (needed if any runtime pnpm commands)
 RUN corepack enable && corepack prepare pnpm@10.17.1 --activate
 
 WORKDIR /app
 
-# Copy only production dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=deps /app/packages ./packages
+# Copy runtime node_modules from builder stage (includes generated Prisma Client)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder /app/packages ./packages
 
-# Copy built application and Prisma client
+# Copy built application and Prisma schema
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/apps/api/node_modules/.prisma ./apps/api/node_modules/.prisma
 
 # Copy package.json for runtime metadata
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
