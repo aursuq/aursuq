@@ -118,7 +118,7 @@ Examples:
 - Complaint escalation
 - Platform administration
 
-Admins may be able to create/add sellers.
+ADMIN does NOT create seller accounts. ADMIN only processes seller applications and verification.
 
 ### Owner
 
@@ -398,6 +398,107 @@ The user has expressed interest in exploring whether lawful criminal-record scre
 DO NOT assume criminal-record screening is legally available or appropriate.
 
 This remains a legal/compliance question until verified.
+
+---
+
+### Seller Verification vs Moderation: Separate Concerns
+
+**Verification** describes whether Aursuq has verified the seller/business information.
+
+**Moderation** describes whether an existing seller is currently allowed to operate.
+
+#### Verification Lifecycle
+- UNVERIFIED — seller/application exists but verification has not yet been submitted/completed
+- PENDING_REVIEW — seller application was submitted and is waiting for an ADMIN/OWNER reviewer
+- IN_VERIFICATION — an ADMIN/OWNER has already started handling this verification; Arabic UI: "إكمال التوثيق"; prevents duplicate reviewer assignment
+- REJECTED — verification/application was rejected or requires corrections
+- VERIFIED — seller successfully passed verification
+
+#### Seller Moderation/Account Lifecycle
+- ACTIVE
+- FROZEN
+- BLOCKED
+- PERMANENTLY_BLOCKED
+
+Archived/deleted state is represented separately through archival metadata and history, not by erasing records.
+
+---
+
+### Field-by-Field Verification
+
+Verification is NOT only one final approve button.
+
+Each important identity/business field must be individually reviewed:
+- Legal/person name
+- Government identity number
+- Identity document
+- Business/legal details
+- Tax/business registration number
+- Phone where applicable
+- Business address
+- Other required onboarding fields added later
+
+Each reviewable field needs a state: PENDING, VERIFIED, REJECTED
+
+ADMIN/OWNER must be able to choose Verify or Reject for each field.
+
+If a field is rejected, store a correction/rejection note explaining what is incorrect or what the seller must fix.
+
+Final verification is based on these reviewed fields.
+
+---
+
+### Verification Claim / Reviewer Lock
+
+When an ADMIN starts verification:
+- Application moves to IN_VERIFICATION
+- Store which ADMIN started it
+- Store verification start timestamp
+- Prevent another ADMIN from simultaneously processing the same verification
+
+OWNER may view, override, or reassign verification when necessary.
+
+Actions: Start Verification, Continue Verification, Reject Application, Complete Verification.
+
+All reviewer assignment/reassignment actions must be auditable.
+
+---
+
+### Application Rejection / Correction
+
+ADMIN/OWNER may reject an application with:
+- Actor, actor role, timestamp, reason, rejected/affected fields, optional reviewer message
+
+The seller must later be able to know exactly what information is missing, which fields were rejected, and what must be corrected.
+
+A rejected application may later be corrected and resubmitted.
+
+Do NOT erase previous verification/rejection history when resubmitted.
+
+---
+
+### OWNER Manual Seller Creation
+
+ONLY OWNER may manually create a seller from the internal Aursuq management interface.
+
+If OWNER manually creates a seller:
+- Seller becomes VERIFIED immediately
+- Normal public application review is skipped
+- Audit history records OWNER who created it, actor role, timestamp, and that verification was granted through internal manual OWNER creation
+
+ADMIN cannot create seller accounts.
+
+---
+
+### Seller Login / Access
+
+An applicant must NOT receive normal seller access merely because an application record exists.
+
+Normal seller access becomes available only after:
+- verificationStatus = VERIFIED
+- Seller moderation/account state allows access/selling
+
+A seller being VERIFIED does not automatically mean all moderation restrictions are cleared.
 
 ---
 

@@ -5,6 +5,7 @@ export interface SellerStoreResponse {
   name: string;
   slug: string;
   isActive: boolean;
+  storeNumber: number;
 }
 
 export interface SellerListItemResponse {

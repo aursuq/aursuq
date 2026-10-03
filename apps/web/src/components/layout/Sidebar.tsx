@@ -58,7 +58,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          let isActive: boolean;
+          if (item.href === '/owner') {
+            // Exact match for Overview
+            isActive = pathname === '/owner';
+          } else {
+            // Prefix match for nested sections (e.g., /owner/sellers, /owner/sellers/123)
+            isActive = pathname.startsWith(item.href);
+          }
           const Icon = item.icon;
           return (
             <Link

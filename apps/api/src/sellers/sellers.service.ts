@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, SellerVerificationStatus, UserRole, UserStatus } from '@prisma/client';
 import { CreateSellerDto } from './create-seller.dto';
@@ -70,8 +70,40 @@ export class SellersService {
     return this.mapToDetailResponse(result.user, result.sellerProfile, result.store);
   }
 
-  async listSellers(): Promise<SellerListItemResponse[]> {
+  async listSellers(search?: string): Promise<SellerListItemResponse[]> {
+    const where: Prisma.SellerProfileWhereInput = {};
+
+    if (search && search.trim()) {
+      const trimmedSearch = search.trim();
+      // Check if search looks like a store number (numeric, possibly with leading zeros)
+      const numericSearch = trimmedSearch.replace(/^0+/, '');
+      const isStoreNumberSearch = /^\d+$/.test(numericSearch);
+
+      where.OR = [
+        // Search by store name (case-insensitive)
+        {
+          store: {
+            name: {
+              contains: trimmedSearch,
+              mode: 'insensitive',
+            },
+          },
+        },
+        // Search by store number (numeric, with or without leading zeros)
+        ...(isStoreNumberSearch
+          ? [
+              {
+                store: {
+                  storeNumber: parseInt(numericSearch, 10),
+                },
+              },
+            ]
+          : []),
+      ];
+    }
+
     const sellerProfiles = await this.prisma.sellerProfile.findMany({
+      where,
       include: {
         user: true,
         store: true,
@@ -98,13 +130,14 @@ export class SellersService {
     return this.mapToDetailResponse(sellerProfile.user, sellerProfile, sellerProfile.store);
   }
 
-  private mapToStoreResponse(store: { id: string; name: string; slug: string; isActive: boolean } | null): SellerStoreResponse | null {
+  private mapToStoreResponse(store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number } | null): SellerStoreResponse | null {
     if (!store) return null;
     return {
       id: store.id,
       name: store.name,
       slug: store.slug,
       isActive: store.isActive,
+      storeNumber: store.storeNumber,
     };
   }
 
@@ -118,7 +151,7 @@ export class SellersService {
     verificationStatus: SellerVerificationStatus;
     createdAt: Date;
     user: { email: string; status: UserStatus };
-    store: { id: string; name: string; slug: string; isActive: boolean } | null;
+    store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number } | null;
   }): SellerListItemResponse {
     return {
       id: sellerProfile.id,
@@ -150,7 +183,7 @@ export class SellersService {
       createdAt: Date;
       updatedAt: Date;
     },
-    store: { id: string; name: string; slug: string; isActive: boolean } | null
+    store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number } | null
   ): SellerDetailResponse {
     return {
       id: sellerProfile.id,
@@ -168,5 +201,48 @@ export class SellersService {
       createdAt: sellerProfile.createdAt,
       updatedAt: sellerProfile.updatedAt,
     };
+  }
+
+  async deletePendingSeller(sellerId: string): Promise<void> {
+    const sellerProfile = await this.prisma.sellerProfile.findUnique({
+      where: { id: sellerId },
+      include: {
+        user: true,
+        store: true,
+      },
+    });
+
+    if (!sellerProfile) {
+      throw new NotFoundException('Seller not found');
+    }
+
+    // Verify deletion is allowed: only PENDING verification AND store not active
+    if (sellerProfile.verificationStatus !== SellerVerificationStatus.PENDING) {
+      throw new ForbiddenException('Only pending sellers can be deleted');
+    }
+
+    if (sellerProfile.store?.isActive) {
+      throw new ForbiddenException('Cannot delete seller with an active store');
+    }
+
+    // Delete atomically in transaction: Store, SellerProfile, User
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Delete Store first (if exists)
+      if (sellerProfile.store) {
+        await tx.store.delete({
+          where: { id: sellerProfile.store.id },
+        });
+      }
+
+      // Delete SellerProfile
+      await tx.sellerProfile.delete({
+        where: { id: sellerProfile.id },
+      });
+
+      // Delete User
+      await tx.user.delete({
+        where: { id: sellerProfile.userId },
+      });
+    });
   }
 }

@@ -7,8 +7,10 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
+  Delete,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { SellersService } from './sellers.service';
 import { CreateSellerDto } from './create-seller.dto';
 import { OwnerGuard } from '../auth/owner.guard';
@@ -35,10 +37,11 @@ export class SellersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List all sellers (Owner only)' })
+  @ApiQuery({ name: 'q', required: false, description: 'Search by store name or store number' })
   @ApiResponse({ status: 200, description: 'List of sellers', type: [Object] })
   @ApiResponse({ status: 401, description: 'Not authenticated or unauthorized' })
-  async listSellers(): Promise<SellerListItemResponse[]> {
-    return this.sellersService.listSellers();
+  async listSellers(@Query('q') search?: string): Promise<SellerListItemResponse[]> {
+    return this.sellersService.listSellers(search);
   }
 
   @Get(':sellerId')
@@ -50,5 +53,17 @@ export class SellersController {
   @ApiResponse({ status: 404, description: 'Seller not found' })
   async getSeller(@Param('sellerId') sellerId: string): Promise<SellerDetailResponse> {
     return this.sellersService.getSellerById(sellerId);
+  }
+
+  @Delete(':sellerId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a pending seller request (Owner only)' })
+  @ApiParam({ name: 'sellerId', description: 'Seller profile ID' })
+  @ApiResponse({ status: 204, description: 'Seller deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Not authenticated or unauthorized' })
+  @ApiResponse({ status: 403, description: 'Deletion not allowed (seller not pending or store active)' })
+  @ApiResponse({ status: 404, description: 'Seller not found' })
+  async deleteSeller(@Param('sellerId') sellerId: string): Promise<void> {
+    return this.sellersService.deletePendingSeller(sellerId);
   }
 }

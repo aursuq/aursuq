@@ -1,20 +1,63 @@
 # Aursuq Core Workflows
 
-## Seller Onboarding
+## Seller Application & Onboarding Workflows
 
-Seller creates/applies for account
-→ enters required details
-→ submits identity/business information
-→ platform reviews verification
-→ seller becomes VERIFIED or is REJECTED
-→ verified seller can operate store according to platform permissions.
+### 1. Public Application Path (PATH A)
+Applicant applies for seller account
+→ fills required personal/business/identity details
+→ submits application → UNVERIFIED
+→ submits for review → PENDING_REVIEW
+→ ADMIN/OWNER reviewer starts verification → IN_VERIFICATION (reviewer locked)
+→ field-by-field verification (each field PENDING → VERIFIED or REJECTED)
+→ if all fields VERIFIED → application becomes VERIFIED
+→ if any field REJECTED → application REJECTED with field notes + reviewer message
+→ seller may correct and resubmit → retains full history → returns to PENDING_REVIEW
+→ VERIFIED seller + ACTIVE moderation → seller access enabled
 
-Possible conceptual states:
+### 2. OWNER Manual Creation Path (PATH B)
+OWNER creates seller internally (ADMIN cannot)
+→ seller immediately becomes VERIFIED
+→ audit event records OWNER manual creation with actor/role/timestamp
+→ public review queue is skipped
+→ normal seller access enabled according to moderation/store rules
 
-PENDING
-VERIFIED
-REJECTED
-SUSPENDED
+### 3. Verification Workflow
+ADMIN/OWNER opens verification queue (filters: UNVERIFIED, PENDING_REVIEW, IN_VERIFICATION, REJECTED, VERIFIED).
+Reviewer starts verification:
+- Application moves to IN_VERIFICATION
+- Reviewer assigned (user ID + role)
+- Verification start timestamp recorded
+- Other ADMINs prevented from simultaneous processing
+- OWNER may override/reassign
+
+Field-by-field review:
+- Each reviewable field: PENDING → VERIFIED or REJECTED
+- Rejected fields store correction/rejection note
+- Fields include: legal name, government identity number, identity document, business/legal details, tax/business registration number, phone, business address, other required fields
+
+Final decision:
+- All fields VERIFIED → VERIFIED
+- Any field REJECTED → REJECTED with complete field notes + reviewer message
+
+### 4. Rejection / Correction / Resubmission Workflow
+ADMIN/OWNER rejects application: records actor, role, timestamp, reason, rejected fields, optional reviewer message. Application moves to REJECTED. Seller sees what is missing and what to correct.
+Seller corrects and resubmits: previous verification/rejection history preserved (NOT erased). Application returns to PENDING_REVIEW.
+
+### 5. Freeze Workflow (Temporary Review)
+OWNER/ADMIN freezes seller: requires reason, records actor/role/timestamp/reason. Seller moderation status → FROZEN. Store Number retained. Full history preserved. Freeze visible internally. Resolution returns seller to ACTIVE.
+
+### 6. Block Workflow (OWNER-Controlled)
+OWNER blocks seller: seller moderation status → BLOCKED. Store Number retained. Complete history retained. ADMIN cannot directly unblock OWNER-blocked seller. ADMIN may submit UNBLOCK REQUEST to OWNER (records requesting ADMIN, reason, timestamp, seller, current block info). OWNER approves or rejects. Decision + reason enters history.
+
+### 7. Permanent Block Workflow (OWNER Only, Irreversible)
+OWNER applies PERMANENTLY_BLOCKED: irreversible — no code path transitions back to ACTIVE. ADMIN cannot unblock. OWNER cannot unblock. Store Number remains reserved. Seller history fully accessible. Stronger than normal BLOCKED.
+
+### 8. Archive / Delete Workflow (No Hard Delete)
+OWNER chooses "Delete Seller" → system ARCHIVES instead of destroying. Archive flow stores: archive timestamp, OWNER who archived, optional reason, optional evidence references, seller/store snapshot, history event. Reason and evidence are optional. Archived sellers remain internally viewable in "Deleted / Archived Stores". Historical Store Number preserved even if later reassigned. Store number released only when archived; historical store number remains in history.
+
+### 9. Transactional Verification-Result Email Direction
+VERIFIED outcome → approval email sent to seller.
+REJECTED/corrections outcome → rejection email with: rejected fields list, correction notes per field, reviewer message. Email is transactional (tied to the verification decision event).
 
 ---
 

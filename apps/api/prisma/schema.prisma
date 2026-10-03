@@ -63,14 +63,15 @@ model SellerProfile {
 }
 
 model Store {
-  id          String   @id @default(uuid())
-  sellerId    String   @unique
-  name        String
-  slug        String   @unique
-  description String?
-  isActive    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  sellerId     String   @unique
+  name         String
+  slug         String   @unique
+  description  String?
+  isActive     Boolean  @default(false)
+  storeNumber  Int      @unique @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
