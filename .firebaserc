@@ -1,0 +1,13 @@
+{
+  "projects": {},
+  "targets": {
+    "aursuq": {
+      "hosting": {
+        "api": [
+          "aursuq-api"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
