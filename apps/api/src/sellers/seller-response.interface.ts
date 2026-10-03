@@ -1,11 +1,12 @@
-import { SellerVerificationStatus, UserStatus } from '@prisma/client';
+import { SellerVerificationStatus, SellerModerationStatus, UserStatus } from '@prisma/client';
 
 export interface SellerStoreResponse {
   id: string;
   name: string;
   slug: string;
   isActive: boolean;
-  storeNumber: number;
+  storeNumber: number | null;
+  archivedStoreNumber: number | null;
 }
 
 export interface SellerListItemResponse {
@@ -17,6 +18,7 @@ export interface SellerListItemResponse {
   taxRegistrationNumber: string;
   phone: string;
   verificationStatus: SellerVerificationStatus;
+  moderationStatus: SellerModerationStatus;
   userStatus: UserStatus;
   store: SellerStoreResponse | null;
   createdAt: Date;
@@ -33,6 +35,7 @@ export interface SellerDetailResponse {
   businessAddress: string;
   identityDocumentReference: string | null;
   verificationStatus: SellerVerificationStatus;
+  moderationStatus: SellerModerationStatus;
   userStatus: UserStatus;
   store: SellerStoreResponse | null;
   createdAt: Date;

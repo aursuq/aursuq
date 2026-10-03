@@ -2,11 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { SellersService } from './sellers.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserRole, UserStatus, SellerVerificationStatus } from '@prisma/client';
+import { StoreNumberAllocatorService } from './store-number-allocator.service';
+import { UserRole, UserStatus, SellerVerificationStatus, SellerModerationStatus } from '@prisma/client';
 import { CreateSellerDto } from './create-seller.dto';
 
 describe('SellersService', () => {
   let service: SellersService;
+  let storeNumberAllocator: {
+    allocate: jest.Mock;
+    associateStore: jest.Mock;
+  };
   let prismaService: {
     user: {
       findUnique: jest.Mock;
@@ -36,6 +41,11 @@ describe('SellersService', () => {
   };
 
   beforeEach(async () => {
+    storeNumberAllocator = {
+      allocate: jest.fn().mockResolvedValue(1),
+      associateStore: jest.fn().mockResolvedValue(undefined),
+    };
+
     prismaService = {
       user: {
         findUnique: jest.fn(),
@@ -57,6 +67,7 @@ describe('SellersService', () => {
       providers: [
         SellersService,
         { provide: PrismaService, useValue: prismaService },
+        { provide: StoreNumberAllocatorService, useValue: storeNumberAllocator },
       ],
     }).compile();
 
@@ -83,7 +94,8 @@ describe('SellersService', () => {
     phone: '+972-50-9876543',
     businessAddress: '456 Market St, Tel Aviv',
     identityDocumentReference: null,
-    verificationStatus: SellerVerificationStatus.PENDING,
+    verificationStatus: SellerVerificationStatus.VERIFIED,
+    moderationStatus: SellerModerationStatus.ACTIVE,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
   };
@@ -94,6 +106,7 @@ describe('SellersService', () => {
     name: 'Acme Retail',
     slug: 'acme-store',
     isActive: false,
+    storeNumber: 1,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
   };
@@ -128,8 +141,16 @@ describe('SellersService', () => {
           name: 'Acme Retail',
           slug: 'acme-store',
           isActive: false,
+          storeNumber: 1,
         },
       });
+
+      expect(storeNumberAllocator.allocate).toHaveBeenCalled();
+      expect(storeNumberAllocator.associateStore).toHaveBeenCalledWith(
+        expect.anything(),
+        1,
+        'store-uuid-1',
+      );
 
       expect(prismaService.sellerProfile.create).toHaveBeenCalledWith({
         data: {
@@ -139,7 +160,8 @@ describe('SellersService', () => {
           taxRegistrationNumber: 'IL987654321',
           phone: '+972-50-9876543',
           businessAddress: '456 Market St, Tel Aviv',
-          verificationStatus: SellerVerificationStatus.PENDING,
+          verificationStatus: SellerVerificationStatus.VERIFIED,
+          moderationStatus: SellerModerationStatus.ACTIVE,
         },
       });
 
@@ -151,13 +173,15 @@ describe('SellersService', () => {
       expect(result.taxRegistrationNumber).toBe('IL987654321');
       expect(result.phone).toBe('+972-50-9876543');
       expect(result.businessAddress).toBe('456 Market St, Tel Aviv');
-      expect(result.verificationStatus).toBe(SellerVerificationStatus.PENDING);
+      expect(result.verificationStatus).toBe(SellerVerificationStatus.VERIFIED);
+      expect(result.moderationStatus).toBe(SellerModerationStatus.ACTIVE);
       expect(result.userStatus).toBe(UserStatus.ACTIVE);
       expect(result.store).toEqual({
         id: 'store-uuid-1',
         name: 'Acme Retail',
         slug: 'acme-store',
         isActive: false,
+        storeNumber: 1,
       });
       expect(result.createdAt).toEqual(mockSellerProfile.createdAt);
       expect(result.updatedAt).toEqual(mockSellerProfile.updatedAt);
@@ -229,6 +253,7 @@ describe('SellersService', () => {
       const mockSellerProfiles = [
         {
           ...mockSellerProfile,
+          moderationStatus: SellerModerationStatus.ACTIVE,
           user: { email: 'seller1@example.com', status: UserStatus.ACTIVE },
           store: { ...mockStore, name: 'Store 1', slug: 'store-1' },
         },
@@ -240,7 +265,8 @@ describe('SellersService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].email).toBe('seller1@example.com');
-      expect(result[0].verificationStatus).toBe(SellerVerificationStatus.PENDING);
+      expect(result[0].verificationStatus).toBe(SellerVerificationStatus.VERIFIED);
+      expect(result[0].moderationStatus).toBe(SellerModerationStatus.ACTIVE);
     });
 
     it('should return empty array when no sellers exist', async () => {

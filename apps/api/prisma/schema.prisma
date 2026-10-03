@@ -22,8 +22,23 @@ enum UserStatus {
 }
 
 enum SellerVerificationStatus {
+  UNVERIFIED
+  PENDING_REVIEW
+  IN_VERIFICATION
+  REJECTED
+  VERIFIED
+}
+
+enum SellerModerationStatus {
+  ACTIVE
+  FROZEN
+  BLOCKED
+  PERMANENTLY_BLOCKED
+}
+
+enum SellerVerificationFieldStatus {
   PENDING
-  APPROVED
+  VERIFIED
   REJECTED
 }
 
@@ -52,28 +67,97 @@ model SellerProfile {
   phone                    String
   businessAddress          String
   identityDocumentReference String?
-  verificationStatus       SellerVerificationStatus @default(PENDING)
+  verificationStatus       SellerVerificationStatus @default(UNVERIFIED)
+  moderationStatus         SellerModerationStatus  @default(ACTIVE)
+  isArchived               Boolean                 @default(false)
+  archivedAt               DateTime?
+  archivedByUserId         String?
+  archiveReason            String?
+  verificationReviewerId   String?
+  verificationStartedAt    DateTime?
+  // Future-safe foundation for government identity uniqueness.
+  // Exact keyed-hash/tokenization mechanism and key management are still undecided (see OPEN_DECISIONS.md).
+  // This field stores a lookup hash/fingerprint, NOT the plaintext government identity number.
+  // Do not generate or populate hashes yet. Do not accept this field from public/frontend DTOs.
+  governmentIdentityLookupHash String? @unique(map: "government_identity_unique")
   createdAt                DateTime                @default(now())
   updatedAt                DateTime                @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  store  Store?
+  user                   User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store                  Store?
+  verificationFields     SellerVerificationField[]
+  auditEvents            SellerAudit[]
 
   @@map("seller_profiles")
 }
 
 model Store {
-  id           String   @id @default(uuid())
-  sellerId     String   @unique
-  name         String
-  slug         String   @unique
-  description  String?
-  isActive     Boolean  @default(false)
-  storeNumber  Int      @unique @default(autoincrement())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String   @id @default(uuid())
+  sellerId          String   @unique
+  name              String
+  slug              String   @unique
+  description       String?
+  isActive          Boolean  @default(false)
+  storeNumber       Int?     @unique
+  archivedStoreNumber Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
   @@map("stores")
+}
+
+enum StoreNumberReservationStatus {
+  RESERVED
+  RELEASED
+}
+
+model StoreNumberReservation {
+  id          String                      @id @default(uuid())
+  number      Int                         @unique
+  status      StoreNumberReservationStatus @default(RESERVED)
+  storeId     String?
+  reservedAt  DateTime                    @default(now())
+  releasedAt  DateTime?
+  createdAt   DateTime                    @default(now())
+  updatedAt   DateTime                    @updatedAt
+
+  @@map("store_number_reservations")
+}
+
+model SellerVerificationField {
+  id                String                        @id @default(uuid())
+  sellerProfileId   String
+  fieldKey          String
+  status            SellerVerificationFieldStatus @default(PENDING)
+  reviewerId        String?
+  reviewedAt        DateTime?
+  rejectionNote     String?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([sellerProfileId, fieldKey])
+  @@map("seller_verification_fields")
+}
+
+model SellerAudit {
+  id             String   @id @default(uuid())
+  sellerProfileId String
+  eventType      String
+  actorUserId    String?
+  actorRole      String?
+  previousState  Json?
+  newState       Json?
+  reason         String?
+  message        String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([sellerProfileId, createdAt])
+  @@map("seller_audit")
 }

@@ -12,7 +12,7 @@ import {
   SellerListItemResponse,
   SellerDetailResponse,
 } from './seller-response.interface';
-import { UserRole, UserStatus, SellerVerificationStatus } from '@prisma/client';
+import { UserRole, UserStatus, SellerVerificationStatus, SellerModerationStatus } from '@prisma/client';
 
 describe('SellersController', () => {
   let controller: SellersController;
@@ -33,7 +33,8 @@ describe('SellersController', () => {
     phone: '+972-50-9876543',
     businessAddress: '456 Market St, Tel Aviv',
     identityDocumentReference: null,
-    verificationStatus: SellerVerificationStatus.PENDING,
+    verificationStatus: SellerVerificationStatus.VERIFIED,
+    moderationStatus: SellerModerationStatus.ACTIVE,
     userStatus: UserStatus.ACTIVE,
     store: {
       id: 'store-uuid-1',
@@ -54,7 +55,8 @@ describe('SellersController', () => {
       businessName: 'Acme Store',
       taxRegistrationNumber: 'IL987654321',
       phone: '+972-50-9876543',
-      verificationStatus: SellerVerificationStatus.PENDING,
+      verificationStatus: SellerVerificationStatus.VERIFIED,
+      moderationStatus: SellerModerationStatus.ACTIVE,
       userStatus: UserStatus.ACTIVE,
       store: {
         id: 'store-uuid-1',

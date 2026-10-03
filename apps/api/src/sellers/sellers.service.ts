@@ -1,12 +1,17 @@
 import { Injectable, ConflictException, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, SellerVerificationStatus, UserRole, UserStatus } from '@prisma/client';
+import { Prisma, SellerVerificationStatus, SellerModerationStatus, UserRole, UserStatus, StoreNumberReservationStatus } from '@prisma/client';
 import { CreateSellerDto } from './create-seller.dto';
+import { ArchiveSellerDto } from './archive-seller.dto';
 import { SellerListItemResponse, SellerDetailResponse, SellerStoreResponse } from './seller-response.interface';
+import { StoreNumberAllocatorService } from './store-number-allocator.service';
 
 @Injectable()
 export class SellersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storeNumberAllocator: StoreNumberAllocatorService,
+  ) {}
 
   async createSeller(dto: CreateSellerDto): Promise<SellerDetailResponse> {
     const normalizedEmail = dto.email.trim().toLowerCase();
@@ -30,8 +35,11 @@ export class SellersService {
       throw new ConflictException('Store slug already in use');
     }
 
-    // Create everything in a transaction
+    // Create everything in a transaction including store number allocation
     const result = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Allocate store number FIRST - this acquires advisory lock
+      const storeNumber = await this.storeNumberAllocator.allocate(tx);
+
       // Create User with SELLER role
       const user = await tx.user.create({
         data: {
@@ -41,7 +49,7 @@ export class SellersService {
         },
       });
 
-      // Create SellerProfile with PENDING verification
+      // Create SellerProfile with VERIFIED verification and ACTIVE moderation for OWNER-created seller per rule 9
       const sellerProfile = await tx.sellerProfile.create({
         data: {
           userId: user.id,
@@ -50,19 +58,24 @@ export class SellersService {
           taxRegistrationNumber: dto.taxRegistrationNumber.trim(),
           phone: dto.phone.trim(),
           businessAddress: dto.businessAddress.trim(),
-          verificationStatus: SellerVerificationStatus.PENDING,
+          verificationStatus: SellerVerificationStatus.VERIFIED,
+          moderationStatus: SellerModerationStatus.ACTIVE,
         },
       });
 
-      // Create Store with isActive = false
+      // Create Store with isActive = false and the allocated store number
       const store = await tx.store.create({
         data: {
           sellerId: sellerProfile.id,
           name: dto.storeName.trim(),
           slug: normalizedStoreSlug,
           isActive: false,
+          storeNumber,
         },
       });
+
+      // Associate the store with the reservation
+      await this.storeNumberAllocator.associateStore(tx, storeNumber, store.id);
 
       return { user, sellerProfile, store };
     });
@@ -71,7 +84,9 @@ export class SellersService {
   }
 
   async listSellers(search?: string): Promise<SellerListItemResponse[]> {
-    const where: Prisma.SellerProfileWhereInput = {};
+    const where: Prisma.SellerProfileWhereInput = {
+      isArchived: false,
+    };
 
     if (search && search.trim()) {
       const trimmedSearch = search.trim();
@@ -130,7 +145,7 @@ export class SellersService {
     return this.mapToDetailResponse(sellerProfile.user, sellerProfile, sellerProfile.store);
   }
 
-  private mapToStoreResponse(store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number } | null): SellerStoreResponse | null {
+  private mapToStoreResponse(store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number | null; archivedStoreNumber: number | null } | null): SellerStoreResponse | null {
     if (!store) return null;
     return {
       id: store.id,
@@ -138,6 +153,7 @@ export class SellersService {
       slug: store.slug,
       isActive: store.isActive,
       storeNumber: store.storeNumber,
+      archivedStoreNumber: store.archivedStoreNumber,
     };
   }
 
@@ -148,10 +164,13 @@ export class SellersService {
     businessName: string;
     taxRegistrationNumber: string;
     phone: string;
+    businessAddress: string;
+    identityDocumentReference: string | null;
     verificationStatus: SellerVerificationStatus;
+    moderationStatus: SellerModerationStatus;
     createdAt: Date;
     user: { email: string; status: UserStatus };
-    store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number } | null;
+    store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number | null; archivedStoreNumber: number | null } | null;
   }): SellerListItemResponse {
     return {
       id: sellerProfile.id,
@@ -162,6 +181,7 @@ export class SellersService {
       taxRegistrationNumber: sellerProfile.taxRegistrationNumber,
       phone: sellerProfile.phone,
       verificationStatus: sellerProfile.verificationStatus,
+      moderationStatus: sellerProfile.moderationStatus,
       userStatus: sellerProfile.user.status,
       store: this.mapToStoreResponse(sellerProfile.store),
       createdAt: sellerProfile.createdAt,
@@ -180,10 +200,11 @@ export class SellersService {
       businessAddress: string;
       identityDocumentReference: string | null;
       verificationStatus: SellerVerificationStatus;
+      moderationStatus: SellerModerationStatus;
       createdAt: Date;
       updatedAt: Date;
     },
-    store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number } | null
+    store: { id: string; name: string; slug: string; isActive: boolean; storeNumber: number | null; archivedStoreNumber: number | null } | null
   ): SellerDetailResponse {
     return {
       id: sellerProfile.id,
@@ -196,6 +217,7 @@ export class SellersService {
       businessAddress: sellerProfile.businessAddress,
       identityDocumentReference: sellerProfile.identityDocumentReference,
       verificationStatus: sellerProfile.verificationStatus,
+      moderationStatus: sellerProfile.moderationStatus,
       userStatus: user.status,
       store: this.mapToStoreResponse(store),
       createdAt: sellerProfile.createdAt,
@@ -203,7 +225,7 @@ export class SellersService {
     };
   }
 
-  async deletePendingSeller(sellerId: string): Promise<void> {
+  async archiveSeller(sellerId: string, ownerUserId: string, dto: ArchiveSellerDto): Promise<SellerDetailResponse> {
     const sellerProfile = await this.prisma.sellerProfile.findUnique({
       where: { id: sellerId },
       include: {
@@ -216,33 +238,62 @@ export class SellersService {
       throw new NotFoundException('Seller not found');
     }
 
-    // Verify deletion is allowed: only PENDING verification AND store not active
-    if (sellerProfile.verificationStatus !== SellerVerificationStatus.PENDING) {
-      throw new ForbiddenException('Only pending sellers can be deleted');
+    if (sellerProfile.isArchived) {
+      throw new ConflictException('Seller is already archived');
     }
 
-    if (sellerProfile.store?.isActive) {
-      throw new ForbiddenException('Cannot delete seller with an active store');
-    }
+    const result = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      let releasedStoreNumber: number | null = null;
 
-    // Delete atomically in transaction: Store, SellerProfile, User
-    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      // Delete Store first (if exists)
-      if (sellerProfile.store) {
-        await tx.store.delete({
+      if (sellerProfile.store && sellerProfile.store.storeNumber !== null) {
+        releasedStoreNumber = sellerProfile.store.storeNumber;
+        
+        // Update Store: decouple storeNumber, set archivedStoreNumber, set isActive = false
+        await tx.store.update({
           where: { id: sellerProfile.store.id },
+          data: {
+            storeNumber: null,
+            archivedStoreNumber: releasedStoreNumber,
+            isActive: false,
+          },
         });
+
+        // Release the store number via allocator service
+        await this.storeNumberAllocator.release(tx, releasedStoreNumber);
       }
 
-      // Delete SellerProfile
-      await tx.sellerProfile.delete({
-        where: { id: sellerProfile.id },
+      // Update SellerProfile to archived state
+      const updatedProfile = await tx.sellerProfile.update({
+        where: { id: sellerId },
+        data: {
+          isArchived: true,
+          archivedAt: new Date(),
+          archivedByUserId: ownerUserId,
+          archiveReason: dto.reason?.trim() || null,
+        },
+        include: {
+          user: true,
+          store: true,
+        },
       });
 
-      // Delete User
-      await tx.user.delete({
-        where: { id: sellerProfile.userId },
+      // Create SellerAudit record
+      await tx.sellerAudit.create({
+        data: {
+          sellerProfileId: sellerId,
+          actorUserId: ownerUserId,
+          actorRole: 'OWNER',
+          eventType: 'ARCHIVE',
+          reason: dto.reason?.trim() || null,
+          metadata: {
+            archivedStoreNumber: releasedStoreNumber,
+          },
+        },
       });
+
+      return updatedProfile;
     });
+
+    return this.mapToDetailResponse(result.user, result, result.store);
   }
 }

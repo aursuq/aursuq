@@ -8,11 +8,13 @@ import {
   HttpCode,
   HttpStatus,
   Query,
-  Delete,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { SellersService } from './sellers.service';
 import { CreateSellerDto } from './create-seller.dto';
+import { ArchiveSellerDto } from './archive-seller.dto';
 import { OwnerGuard } from '../auth/owner.guard';
 import { SellerListItemResponse, SellerDetailResponse } from './seller-response.interface';
 
@@ -55,15 +57,21 @@ export class SellersController {
     return this.sellersService.getSellerById(sellerId);
   }
 
-  @Delete(':sellerId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a pending seller request (Owner only)' })
+  @Post(':sellerId/archive')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Archive a seller (Owner only)' })
   @ApiParam({ name: 'sellerId', description: 'Seller profile ID' })
-  @ApiResponse({ status: 204, description: 'Seller deleted successfully' })
+  @ApiResponse({ status: 200, description: 'Seller archived successfully' })
   @ApiResponse({ status: 401, description: 'Not authenticated or unauthorized' })
-  @ApiResponse({ status: 403, description: 'Deletion not allowed (seller not pending or store active)' })
   @ApiResponse({ status: 404, description: 'Seller not found' })
-  async deleteSeller(@Param('sellerId') sellerId: string): Promise<void> {
-    return this.sellersService.deletePendingSeller(sellerId);
+  @ApiResponse({ status: 409, description: 'Seller is already archived' })
+  async archiveSeller(
+    @Param('sellerId') sellerId: string,
+    @Body() dto: ArchiveSellerDto,
+    @Req() request: Request,
+  ): Promise<SellerDetailResponse> {
+    const sessionPayload = (request as any).sessionPayload;
+    const ownerUserId = sessionPayload?.userId;
+    return this.sellersService.archiveSeller(sellerId, ownerUserId, dto);
   }
 }
