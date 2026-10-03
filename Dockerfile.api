@@ -1,0 +1,86 @@
+# syntax=docker/dockerfile:1
+
+# Multi-stage production build for Aursuq API
+# Build context: repository root (to access pnpm-workspace.yaml and all workspace packages)
+
+# =============================================================================
+# Stage 1: Base - Install pnpm and dependencies
+# =============================================================================
+FROM node:20-alpine AS base
+
+# Enable corepack for pnpm
+RUN corepack enable && corepack prepare pnpm@10.17.1 --activate
+
+WORKDIR /app
+
+# Copy package files and pnpm-lock.yaml for dependency installation
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/*/package.json ./packages/
+
+# =============================================================================
+# Stage 2: Dependencies - Install all dependencies
+# =============================================================================
+FROM base AS deps
+
+# Install dependencies using pnpm (frozen lockfile for reproducibility)
+RUN pnpm install --frozen-lockfile --prod=false
+
+# =============================================================================
+# Stage 3: Builder - Generate Prisma Client and build the application
+# =============================================================================
+FROM deps AS builder
+
+# Copy source code
+COPY apps/api ./apps/api
+COPY packages ./packages
+
+# Generate Prisma Client
+WORKDIR /app/apps/api
+RUN pnpm prisma:generate
+
+# Build the NestJS application
+RUN pnpm build
+
+# =============================================================================
+# Stage 4: Runner - Production image with minimal footprint
+# =============================================================================
+FROM node:20-alpine AS runner
+
+# Enable corepack for pnpm (needed if any runtime pnpm commands)
+RUN corepack enable && corepack prepare pnpm@10.17.1 --activate
+
+WORKDIR /app
+
+# Copy only production dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages ./packages
+
+# Copy built application and Prisma client
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/apps/api/node_modules/.prisma ./apps/api/node_modules/.prisma
+
+# Copy package.json for runtime metadata
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+
+# Set working directory to the API app
+WORKDIR /app/apps/api
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001 -G nodejs
+
+# Change ownership of app directory
+RUN chown -R nestjs:nodejs /app
+
+# Switch to non-root user
+USER nestjs
+
+# Expose port (Cloud Run will set PORT env var)
+EXPOSE 3000
+
+# Start the compiled NestJS application
+# Cloud Run provides PORT environment variable automatically
+CMD ["node", "dist/main.js"]

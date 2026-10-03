@@ -6,25 +6,19 @@ COMPLETED
 
 ## Current Phase
 
-Phase 1A — Seller Lifecycle Data Model Foundation — COMPLETE
+Google Cloud Run Production Deployment Preparation — COMPLETE
 
 ## Current Task
 
-Phase 1A has been successfully implemented and validated.
-
-### What Was Done in Phase 1A:
-1. **Expanded Seller Verification Status** — Replaced `PENDING/APPROVED/REJECTED` with `UNVERIFIED`, `PENDING_REVIEW`, `IN_VERIFICATION`, `REJECTED`, `VERIFIED`.
-2. **Added Seller Moderation Status** — Added `SellerModerationStatus` enum (`ACTIVE`, `FROZEN`, `BLOCKED`, `PERMANENTLY_BLOCKED`) and added `moderationStatus` to `SellerProfile`.
-3. **Archive/Soft-Delete Foundation** — Added `isArchived`, `archivedAt`, `archivedByUserId`, and `archiveReason` fields to `SellerProfile`.
-4. **Reviewer Assignment Foundation** — Added `verificationReviewerId` and `verificationStartedAt` fields to `SellerProfile`.
-5. **Field Verification Model** — Created `SellerVerificationField` model and `SellerVerificationFieldStatus` enum (`PENDING`, `VERIFIED`, `REJECTED`).
-6. **Seller Audit / History Model** — Created append-only `SellerAudit` model with JSON payload support.
-7. **Government Identity Foundation (Security Corrected)** — Replaced raw plaintext `governmentIdentityNumber` with future-safe nullable `governmentIdentityLookupHash` with a unique index. Secure hashing/encryption design remains open per OPEN_DECISIONS.md.
-8. **Store Number** — Preserved existing `storeNumber` allocator behavior per requirements (allocator replacement deferred to Phase 1B).
-9. **Owner Manual Creation Rule** — Updated backend seller creation so OWNER-created sellers are created directly with `verificationStatus = VERIFIED` and `moderationStatus = ACTIVE`.
-10. **Hard Delete Debt** — Preserved and marked the temporary destructive delete endpoint as implementation debt.
-11. **Dashboard Counts & APIs** — Updated seller mapping and API responses to support verification and moderation statuses safely without exposing sensitive data.
-12. **Migrations & Tests** — Created and applied Prisma migration, updated and passed all API typecheck, unit tests, web typecheck, and web build checks.
+Prepared the Aursuq NestJS API for production deployment to Google Cloud Run:
+1. Created production multi-stage Dockerfile (`Dockerfile.api`) at repository root using Node 20 alpine, corepack/pnpm, frozen lockfile installation, Prisma client generation, and build steps.
+2. Created `.dockerignore` to exclude git, node_modules, local build caches, secrets, and environment files.
+3. Verified and updated `apps/api/src/main.ts` to support Cloud Run's dynamic `PORT` environment variable (`process.env.PORT ?? 3000`).
+4. Enhanced CORS configuration to support production domains (`https://aursuq.com`, `https://www.aursuq.com`, `https://api.aursuq.com`) with credentials, preserving local development support (`http://localhost:3000`, `http://localhost:3001`).
+5. Verified authentication cookies and session configuration (`SessionService`) for production HTTPS security (`secure: true`, `sameSite: 'none'`).
+6. Preserved existing `GET /health` endpoint for Cloud Run health checks.
+7. Ensured no database migrations run automatically on API process startup.
+8. Ran local verification (`pnpm --filter @aursuq/api typecheck`, `pnpm --filter @aursuq/api build`, `pnpm --filter @aursuq/api test`).
 
 ---
 

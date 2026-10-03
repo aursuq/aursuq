@@ -10,6 +10,9 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
+    'https://aursuq.com',
+    'https://www.aursuq.com',
+    'https://api.aursuq.com',
   ];
 
   app.enableCors({
@@ -25,8 +28,8 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  const port = process.env.PORT ?? 4000;
+  const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  console.log(`Aursuq API running on http://localhost:${port}`);
+  console.log(`Aursuq API running on port ${port}`);
 }
 bootstrap();
